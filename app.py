@@ -46,7 +46,12 @@ def _build_ydl_options(task_id, choice):
     }
 
     if cookies_file:
-        options["cookiefile"] = cookies_file
+        tmp_cookies_path = os.path.join("/tmp", f"cookies_{task_id}.txt")
+        try:
+            shutil.copyfile(cookies_file, tmp_cookies_path)
+            options["cookiefile"] = tmp_cookies_path
+        except Exception:
+            options["cookiefile"] = cookies_file
 
     if choice == "audio":
         options["format"] = "bestaudio/best"
