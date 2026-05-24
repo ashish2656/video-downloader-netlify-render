@@ -70,7 +70,7 @@ def _build_ydl_options(task_id, choice):
         else:
             options["format"] = "best"
     else:
-        options["format"] = "bestvideo+bestaudio/best"
+        options["format"] = "best"
 
     return options
 
