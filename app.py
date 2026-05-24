@@ -82,14 +82,31 @@ def _run_download(task_id, url, choice):
             message = status.get("_percent_str", "Downloading")
             _update_task(task_id, status="downloading", message=message)
 
+    def run_with_options(ydl_opts):
+        with YoutubeDL(ydl_opts) as ydl:
+            return ydl.extract_info(url, download=True)
+
     try:
         _update_task(task_id, status="downloading", message="Starting download")
         ydl_opts = _build_ydl_options(task_id, choice)
         ydl_opts["progress_hooks"] = [progress_hook]
 
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            title = info.get("title", "Download ready")
+        try:
+            info = run_with_options(ydl_opts)
+        except Exception:
+            if choice in {"video", "both"}:
+                _update_task(task_id, status="downloading", message="Retrying with safe format")
+                for path in glob.glob(os.path.join(DOWNLOADS_DIR, f"{task_id}.*")):
+                    try:
+                        os.remove(path)
+                    except OSError:
+                        continue
+                ydl_opts["format"] = "best"
+                info = run_with_options(ydl_opts)
+            else:
+                raise
+
+        title = info.get("title", "Download ready")
 
         file_path = _find_latest_file(task_id)
         if not file_path:
