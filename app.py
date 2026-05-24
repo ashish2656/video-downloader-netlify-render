@@ -38,11 +38,15 @@ def _find_latest_file(task_id):
 
 def _build_ydl_options(task_id, choice):
     ffmpeg_available = shutil.which("ffmpeg") is not None
+    cookies_file = os.environ.get("COOKIES_FILE")
     options = {
         "outtmpl": os.path.join(DOWNLOADS_DIR, f"{task_id}.%(ext)s"),
         "quiet": True,
         "no_warnings": True
     }
+
+    if cookies_file:
+        options["cookiefile"] = cookies_file
 
     if choice == "audio":
         options["format"] = "bestaudio/best"
