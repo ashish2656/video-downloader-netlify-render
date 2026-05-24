@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader - Instagram & YouTube</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .choice-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .radio-label:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .radio-label input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .radio-label input[type="radio"]:checked + span {
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .radio-label input[type="radio"]:checked {
+            accent-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-box {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+        }
+
+        .status-box.show {
+            display: block;
+        }
+
+        .status-box.downloading {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            color: #1976d2;
+        }
+
+        .status-box.completed {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        .status-box.error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+
+        .status-message {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(25, 118, 210, 0.3);
+            border-radius: 50%;
+            border-top-color: #1976d2;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .download-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: white;
+            color: #2e7d32;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .info-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .choice-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Video Downloader</h1>
+            <p>Download Instagram & YouTube videos in highest quality</p>
+        </div>
+
+        <form id="downloadForm">
+            <div class="form-group">
+                <label for="url">📎 Paste Video Link</label>
+                <input 
+                    type="url" 
+                    id="url" 
+                    placeholder="https://www.youtube.com/watch?v=..." 
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Download Type</label>
+                <div class="choice-container">
+                    <label class="radio-label">
+                        <input type="radio" name="choice" value="video" checked>
+                        <span>🎥 Video Only</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="choice" value="audio">
+                        <span>🎵 Audio Only</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="choice" value="both">
+                        <span>📦 Both</span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" id="downloadBtn">Start Download</button>
+        </form>
+
+        <div id="statusBox" class="status-box">
+            <div class="status-message" id="statusMessage"></div>
+        </div>
+
+        <div class="info-box">
+            <strong>ℹ️ Information:</strong>
+            ✓ Works with YouTube & Instagram<br>
+            ✓ Highest quality available<br>
+            ✓ Fast download speeds<br>
+            ✓ Files saved to server
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('downloadForm');
+        const statusBox = document.getElementById('statusBox');
+        const statusMessage = document.getElementById('statusMessage');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const urlInput = document.getElementById('url');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const url = urlInput.value.trim();
+            const choice = document.querySelector('input[name="choice"]:checked').value;
+
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            downloadBtn.disabled = true;
+
+            try {
+                // Start download
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, choice })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showStatus('error', error.error);
+                    downloadBtn.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                const taskId = data.task_id;
+
+                // Show downloading status
+                showStatus('downloading', '<span class="spinner"></span>Downloading... Please wait');
+
+                // Poll status
+                pollStatus(taskId);
+
+            } catch (error) {
+                showStatus('error', 'Network error. Please try again.');
+                downloadBtn.disabled = false;
+            }
+        });
+
+        function showStatus(type, message) {
+            statusBox.classList.remove('downloading', 'completed', 'error');
+            statusBox.classList.add(type, 'show');
+            statusMessage.innerHTML = message;
+        }
+
+        async function pollStatus(taskId) {
+            const maxAttempts = 600; // 10 minutes with 1s intervals
+            let attempts = 0;
+
+            const interval = setInterval(async () => {
+                attempts++;
+
+                try {
+                    const response = await fetch(`/api/status/${taskId}`);
+                    const data = await response.json();
+
+                    if (data.status === 'downloading') {
+                        showStatus('downloading', `<span class="spinner"></span>Downloading... ${data.message}`);
+                    } else if (data.status === 'completed') {
+                        showStatus('completed', `✓ Download completed!<br><small>${data.title}</small>`);
+                        clearInterval(interval);
+                        downloadBtn.disabled = false;
+                        form.reset();
+                    } else if (data.status === 'error') {
+                        showStatus('error', `✗ ${data.message}`);
+                        clearInterval(interval);
+                        downloadBtn.disabled = false;
+                    }
+
+                    if (attempts >= maxAttempts) {
+                        showStatus('error', 'Download timeout. Please try again.');
+                        clearInterval(interval);
+                        downloadBtn.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Status check error:', error);
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
