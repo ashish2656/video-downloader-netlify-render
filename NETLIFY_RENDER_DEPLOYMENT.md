@@ -55,3 +55,5 @@ Frontend:
 
 - Netlify is static hosting. The Flask API must stay on Render.
 - If requests fail, confirm the Netlify URL matches ALLOWED_ORIGINS.
+- Downloads are stored on the Render server and served via a download link.
+- Audio MP3 and merged video require ffmpeg on the server. If ffmpeg is missing, the API falls back to a single best format.

@@ -16,6 +16,7 @@ export default function App() {
   const [status, setStatus] = useState({ type: "idle", message: "" });
   const [taskId, setTaskId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState("");
 
   const canSubmit = useMemo(() => url.trim().length > 0 && !isSubmitting, [url, isSubmitting]);
 
@@ -43,10 +44,15 @@ export default function App() {
         }
 
         if (data.status === "completed") {
+          const urlFromApi = data.download_url || "";
+          const resolvedUrl = urlFromApi.startsWith("http")
+            ? urlFromApi
+            : `${API_BASE}${urlFromApi}`;
           setStatus({
             type: "completed",
             message: data.title || "Request accepted"
           });
+          setDownloadUrl(resolvedUrl);
           setIsSubmitting(false);
           clearInterval(interval);
         }
@@ -56,6 +62,7 @@ export default function App() {
             type: "error",
             message: data.message || "Something went wrong"
           });
+          setDownloadUrl("");
           setIsSubmitting(false);
           clearInterval(interval);
         }
@@ -65,11 +72,13 @@ export default function App() {
             type: "error",
             message: "Request timed out. Try again."
           });
+          setDownloadUrl("");
           setIsSubmitting(false);
           clearInterval(interval);
         }
       } catch (error) {
         setStatus({ type: "error", message: "Network error. Try again." });
+        setDownloadUrl("");
         setIsSubmitting(false);
         clearInterval(interval);
       }
@@ -85,11 +94,13 @@ export default function App() {
     event.preventDefault();
     if (!url.trim()) {
       setStatus({ type: "error", message: "Please enter a URL." });
+      setDownloadUrl("");
       return;
     }
 
     setIsSubmitting(true);
     setStatus({ type: "downloading", message: "Submitting request" });
+    setDownloadUrl("");
 
     try {
       const response = await fetch(`${API_BASE}/api/download`, {
@@ -101,6 +112,7 @@ export default function App() {
       const data = await response.json();
       if (!response.ok) {
         setStatus({ type: "error", message: data.error || "Request failed" });
+        setDownloadUrl("");
         setIsSubmitting(false);
         return;
       }
@@ -108,6 +120,7 @@ export default function App() {
       setTaskId(data.task_id);
     } catch (error) {
       setStatus({ type: "error", message: "Network error. Try again." });
+      setDownloadUrl("");
       setIsSubmitting(false);
     }
   };
@@ -187,6 +200,11 @@ export default function App() {
               <div>
                 <p className="status__title">{status.type}</p>
                 <p className="status__message">{status.message}</p>
+                {status.type === "completed" && downloadUrl ? (
+                  <a className="status__action" href={downloadUrl}>
+                    Download file
+                  </a>
+                ) : null}
               </div>
             </motion.section>
           )}
